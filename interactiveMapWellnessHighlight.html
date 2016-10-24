@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>How Well is your State?</title>
+
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.0-rc.3/dist/leaflet.css" />
+
+	<style>
+		#map {
+			width: 800px;
+			height: 500px;
+		}
+
+		.info {
+			padding: 6px 8px;
+			font: 14px/16px Arial, Helvetica, sans-serif;
+			background: white;
+            background: rgba(255,255,255,0.8);
+			box-shadow: 0 0 15px rgba(0,0,0,0.2);
+			border-radius: 5px;
+		}
+		.info h4 {
+			margin: 0 0 5px;
+			color: #777;
+		}
+
+		.legend {
+			text-align: left;
+			line-height: 18px;
+			color: #555;
+		}
+		.legend i {
+			width: 18px;
+			height: 18px;
+			float: left;
+			margin-right: 8px;
+			opacity: 0.8;
+		}
+	</style>
+</head>
+<body>
+	<div id="map"></div>
+
+	<script src="https://unpkg.com/leaflet@1.0.0-rc.3/dist/leaflet.js"></script>
+
+	<script type="text/javascript" src="us-statewellness.js"></script>
+	<script type="text/javascript">
+
+		var map = L.map('map').setView([37.8, -96], 3);
+
+		L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+				'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+			id: 'mapbox.light'
+		}).addTo(map);
+
+        
+
+
+		// control that shows state info on hover
+		var info = L.control();
+
+		info.onAdd = function (map) {
+			this._div = L.DomUtil.create('div', 'info');
+			this.update();
+			return this._div;
+		};
+
+		info.update = function (props) {
+			this._div.innerHTML = '<h4>Gallup-Health Wellbeing Rankings</h4>' +  (props ?
+				'<b>' + props.name + '</b><br />' + props.wellnessRank + ' Composite Rank'
+				: 'Hover over a state');
+		};
+
+		info.addTo(map);
+
+
+		// get color depending on population density value
+		function getColor(d) {
+			return d > 40 ? '#7fcdbb' :
+			       d > 30 ? '#41b6c4' :
+			       d > 20 ? '#1d91c0' :
+			       d > 10 ? '#225ea8' :
+			       d >  0 ? '#0c2c84' :
+			                'grey';
+		}
+
+		var style1 = function style(feature) {
+			return {
+				weight: 1,
+				opacity: 1,
+				color: 'white',
+				//dashArray: '3',
+				fillOpacity: 0.8,
+				fillColor: getColor(feature.properties.wellnessRank)
+			};
+		}
+
+		var style2 = function style(feature) {
+			return {
+				weight: 1,
+				opacity: 1,
+				color: 'white',
+				//dashArray: '3',
+				fillOpacity: 0.8,
+				fillColor: getColor(feature.properties.purpose)
+			};
+		}
+	var style3 = function style(feature) {
+			return {
+				weight: 1,
+				opacity: 1,
+				color: 'white',
+				//dashArray: '3',
+				fillOpacity: 0.8,
+				fillColor: getColor(feature.properties.social)
+			};
+		}
+
+		var style4 = function style(feature) {
+			return {
+				weight: 1,
+				opacity: 1,
+				color: 'white',
+				//dashArray: '3',
+				fillOpacity: 0.8,
+				fillColor: getColor(feature.properties.financial)
+			};
+		}
+
+	var style5 = function style(feature) {
+			return {
+				weight: 1,
+				opacity: 1,
+				color: 'white',
+				//dashArray: '3',
+				fillOpacity: 0.8,
+				fillColor: getColor(feature.properties.community)
+			};
+		}
+
+		var style6 = function style(feature) {
+			return {
+				weight: 1,
+				opacity: 1,
+				color: 'white',
+				//dashArray: '3',
+				fillOpacity: 0.8,
+				fillColor: getColor(feature.properties.physical)
+			};
+		}
+
+
+		function highlightFeature(e) {
+			var layer = e.target;
+
+			layer.setStyle({
+				weight: 3,
+				color: 'white',
+				dashArray: '',
+				fillOpacity: 0.7
+			});
+
+			if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+				layer.bringToFront();
+			}
+
+			info.update(layer.feature.properties);
+		}
+
+		//var wellnessComposite;
+
+
+		function resetHighlight(e) {
+			wellnessLayer.resetStyle(e.target);
+			info.update();
+		}
+		
+
+		function zoomToFeature(e) {
+			map.fitBounds(e.target.getBounds());
+		}
+
+		function onEachFeature(feature, layer) {
+			layer.on({
+				mouseover: highlightFeature,
+				mouseout: resetHighlight,
+				click: zoomToFeature
+			});
+		}
+
+
+		wellnessLayer = L.geoJson(statesData, {
+			style: style1,
+			onEachFeature: onEachFeature });
+
+
+		purposeLayer = L.geoJson(statesData, {
+			style: style2,
+			onEachFeature: onEachFeature});
+
+		socialLayer = L.geoJson(statesData, {
+			style: style3,
+			onEachFeature: onEachFeature});
+
+		financialLayer = L.geoJson(statesData, {
+			style: style4,
+			onEachFeature: onEachFeature});
+
+		communityLayer = L.geoJson(statesData, {
+			style: style5,
+			onEachFeature: onEachFeature});
+
+		physicalLayer = L.geoJson(statesData, {
+			style: style6,
+			onEachFeature: onEachFeature});
+		
+		//}).addTo(map);
+
+
+var baseMaps = {"<b>Overall Wellbeing</b>": wellnessLayer,
+"Purpose": purposeLayer,
+"Social": socialLayer,
+"Financial": financialLayer,
+"Community": communityLayer,
+"Physical": physicalLayer
+
+};
+L.control.layers(baseMaps).addTo(map);
+
+wellnessLayer.addTo(map);
+
+		map.attributionControl.addAttribution('Wellness data &copy; <a href="www.well-beingindex.com/">Gallup-Healthways</a>');
+
+
+		var legend = L.control({position: 'bottomright'});
+
+		legend.onAdd = function (map) {
+
+			var div = L.DomUtil.create('div', 'info legend'),
+				grades = [0, 10, 20, 30, 40],
+				labels = [],
+				from, to;
+
+			for (var i = 0; i < grades.length; i++) {
+				from = grades[i];
+				to = grades[i + 1];
+
+				labels.push(
+					'<i style="background:' + getColor(from + 1) + '"></i> ' +
+					from + (to ? '&ndash;' + to : '+'));
+			}
+
+			div.innerHTML = labels.join('<br>');
+			return div;
+		};
+
+		legend.addTo(map);
+
+	</script>
+</body>
+</html>
